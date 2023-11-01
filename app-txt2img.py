@@ -22,25 +22,14 @@ import time
 
 MAX_QUEUE_SIZE = int(os.environ.get("MAX_QUEUE_SIZE", 0))
 TIMEOUT = float(os.environ.get("TIMEOUT", 0))
-SAFETY_CHECKER = os.environ.get("SAFETY_CHECKER", None)
 
-print(f"TIMEOUT: {TIMEOUT}")
-print(f"SAFETY_CHECKER: {SAFETY_CHECKER}")
-print(f"MAX_QUEUE_SIZE: {MAX_QUEUE_SIZE}")
-
-if SAFETY_CHECKER == "True":
-    pipe = DiffusionPipeline.from_pretrained(
-        "SimianLuo/LCM_Dreamshaper_v7",
-        custom_pipeline="latent_consistency_txt2img.py",
-        custom_revision="main",
-    )
-else:
-    pipe = DiffusionPipeline.from_pretrained(
-        "SimianLuo/LCM_Dreamshaper_v7",
-        safety_checker=None,
-        custom_pipeline="latent_consistency_txt2img.py",
-        custom_revision="main",
-    )
+pipe = DiffusionPipeline.from_pretrained(
+    "SimianLuo/LCM_Dreamshaper_v7",
+    torch_dtype=torch.float16,
+    safety_checker=None,
+    custom_pipeline="latent_consistency_txt2img.py",
+    custom_revision="main",
+)
 pipe.vae = AutoencoderTiny.from_pretrained(
     "madebyollin/taesd", torch_dtype=torch.float16, use_safetensors=True
 )
@@ -48,7 +37,7 @@ pipe.set_progress_bar_config(disable=True)
 pipe.to(torch_device="cuda", torch_dtype=torch.float16)
 pipe.unet.to(memory_format=torch.channels_last)
 compel_proc = Compel(tokenizer=pipe.tokenizer, text_encoder=pipe.text_encoder, truncate_long_prompts=False)
-pipe.unet = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=True)
+# pipe.unet = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=True)
 user_queue_map = {}
 
 # warmup trigger compilation
