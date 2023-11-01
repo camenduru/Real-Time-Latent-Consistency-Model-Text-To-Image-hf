@@ -37,7 +37,7 @@ pipe.set_progress_bar_config(disable=True)
 pipe.to(torch_device="cuda", torch_dtype=torch.float16)
 pipe.unet.to(memory_format=torch.channels_last)
 compel_proc = Compel(tokenizer=pipe.tokenizer, text_encoder=pipe.text_encoder, truncate_long_prompts=False)
-# pipe.unet = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=True)
+pipe.unet = torch.compile(pipe.unet, mode="reduce-overhead", fullgraph=True)
 user_queue_map = {}
 
 # warmup trigger compilation
